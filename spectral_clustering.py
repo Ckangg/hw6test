@@ -161,7 +161,7 @@ def spectral_clustering():
         sse_list1.append(sse)
         ari_list1.append(ari)
         #print(f"sigma:{sigma_list[i]}ARI {ari}:")
-        groups[i]= {"sigma": sigma, "ARI": ari, "SSE": sse}
+        groups[i]= {"sigma": float(sigma), "ARI": float(ari), "SSE": float(sse)}
         if ari > max_ari:
             max_ari = ari
             best_sigma = sigma
