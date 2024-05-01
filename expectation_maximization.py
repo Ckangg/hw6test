@@ -2,7 +2,7 @@ import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 from numpy.typing import NDArray
-from sklearn.metrics import confusion_matrix
+#from sklearn.metrics import confusion_matrix
 
 # ----------------------------------------------------------------------
 
@@ -58,7 +58,25 @@ def compute_ARI(confusion_matrix: NDArray[np.int32]):
     ari = (tp * tn - fp * fn) / np.sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn))
     return ari"""
    
+def confusion_matrix_numpy(y_true, y_pred):
+    """
+    Calculate the confusion matrix using NumPy.
 
+    Args:
+    - y_true (numpy.ndarray): True labels.
+    - y_pred (numpy.ndarray): Predicted labels.
+    - num_classes (int): Number of classes.
+
+    Returns:
+    - numpy.ndarray: Confusion matrix.
+    """
+    num_classes=2
+    confusion_mat = np.zeros((num_classes, num_classes), dtype=np.int64)
+    for i in range(num_classes):
+        for j in range(num_classes):
+            confusion_mat[i, j] = np.sum((y_true == i) & (y_pred == j))
+    return confusion_mat
+    
 def adjusted_rand_index(labels_true, labels_pred) -> float:
     """
     Compute the adjusted Rand index.
@@ -310,7 +328,7 @@ def gaussian_mixture():
         # print("means: ", means)
         # print("weights: ", weights)
         # match the labels
-        confusion_mat = confusion_matrix(label_samples, predicted_labels)
+        confusion_mat = confusion_matrix_numpy(label_samples, predicted_labels)
         # answers["confusion_matrix"] = confusion_mat
 
         ARI = adjusted_rand_index(label_samples, predicted_labels)
