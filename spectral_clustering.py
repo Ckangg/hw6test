@@ -125,8 +125,8 @@ def spectral_clustering():
     # Return your `spectral` function
     
     answers["spectral_function"] = spectral
-    data = np.load("C:\\Users\\11203\\pyStudy\\TranFraud\\pgm\\CAP-5771-s24-hw6-main\\CAP-5771-s24-hw6-main\\question1_cluster_data.npy")
-    labels = np.load("C:\\Users\\11203\\pyStudy\\TranFraud\\pgm\\CAP-5771-s24-hw6-main\\CAP-5771-s24-hw6-main\\question1_cluster_labels.npy")
+    data = np.load("question1_cluster_data.npy")
+    labels = np.load("question1_cluster_labels.npy")
     n_points = data.shape[0]
     indices = np.random.choice(n_points, size=5000, replace=False)
 
