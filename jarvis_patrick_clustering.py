@@ -77,32 +77,10 @@ def jarvis_patrick2(data, smin, k):
 
     return new_clusters
 
+"""
 def jarvis_patrick(
     data: NDArray[np.floating], labels: NDArray[np.int32], params_dict: dict
 ) -> tuple[NDArray[np.int32] | None, float | None, float | None]:
-    """
-    Implementation of the Jarvis-Patrick algorithm only using the `numpy` module.
-
-    Arguments:
-    - data: a set of points of shape 50,000 x 2.
-    - dict: dictionary of parameters. The following two parameters must
-       be present: 'k', 'smin', There could be others.
-    - params_dict['k']: the number of nearest neighbors to consider. This determines the size of the neighborhood used to assess the similarity between datapoints. Choose values in the range 3 to 8
-    - params_dict['smin']:  the minimum number of shared neighbors to consider two points in the same cluster.
-       Choose values in the range 4 to 10.
-
-    Return values:
-    - computed_labels: computed cluster labels
-    - SSE: float, sum of squared errors
-    - ARI: float, adjusted Rand index
-
-    Notes:
-    - the nearest neighbors can be bidirectional or unidirectional
-    - Bidirectional: if point A is a nearest neighbor of point B, then point B is a nearest neighbor of point A).
-    - Unidirectional: if point A is a nearest neighbor of point B, then point B is not necessarily a nearest neighbor of point A).
-    - In this project, only consider unidirectional nearest neighboars for simplicity.
-    - The metric  used to compute the the k-nearest neighberhood of all points is the Euclidean metric
-    """
     smin= int(params_dict["smin"])
     k = int(params_dict["k"])
     distances = compute_distances(data)
@@ -132,55 +110,75 @@ def jarvis_patrick(
     computed_labels = np.zeros(len(data), dtype=int)
     for idx, cluster in enumerate(clusters):
         computed_labels[cluster] = idx
-    #clusters = np.zeros(n, dtype=int)
-    #print("params",params_dict)
-    #smin= int(params_dict["smin"])
-    #k = int(params_dict["k"])
+    
     SSE = 0
     for cluster in clusters:
         points = data[cluster]
         centroid = np.mean(points, axis=0)
         SSE += np.sum((points - centroid) ** 2)
     ARI = calculate_ari(labels, computed_labels)
-    """
-    for i in range(n):
-        neighbors = np.argsort(distances[i])[:k]
-        for j in neighbors:
-            if j == i:
-                continue
-            shared_neighbors = len(np.intersect1d(np.where(distances[i] <= smin), np.where(distances[j] <= smin)))
-            if shared_neighbors >= smin:
-                if clusters[i] == 0 and clusters[j] == 0:
-                    clusters[i] = clusters[j] = np.max(clusters) + 1
-                elif clusters[i] == 0:
-                    clusters[i] = clusters[j]
-                elif clusters[j] == 0:
-                    clusters[j] = clusters[i]
-                else:
-                    min_cluster = min(clusters[i], clusters[j])
-                    clusters[clusters == clusters[i]] = min_cluster
-                    clusters[clusters == clusters[j]] = min_cluster
-
-    unique_clusters, counts = np.unique(clusters, return_counts=True)
-    while len(unique_clusters) > 5:
-        min_cluster = unique_clusters[np.argmin(counts)]
-        clusters[clusters == min_cluster] = 0
-        unique_clusters, counts = np.unique(clusters, return_counts=True)
-    
-    new_clusters = np.zeros(len(clusters), dtype=int)
-    for i, cluster in enumerate(unique_clusters):
-        new_clusters[clusters == cluster] = i + 1
-        print(f"Cluster {i + 1}: {counts[i]} points")
-    computed_labels=new_clusters
-    SSE=compute_sse(data, clusters)
-    ARI = calculate_ari(labels, clusters-1)
-    
-    computed_labels: NDArray[np.int32] | None = None
-    SSE: float | None = None
-    ARI: float | None = None
-    """
+   
 
     return computed_labels, SSE, ARI
+""" 
+import numpy as np
+from scipy.spatial.distance import cdist
+
+def jarvis_patrick(data, labels, params_dict):
+    smin = int(params_dict["smin"])
+    k = int(params_dict["k"])
+    
+    # Precompute pairwise distances
+    distances = cdist(data, data)
+    np.fill_diagonal(distances, np.inf)  # Exclude self-distance
+
+    # Find k-nearest neighbors
+    neighbors = np.argsort(distances, axis=1)[:, :k]
+
+    # Calculate shared neighbors matrix
+    shared_neighbors = np.zeros_like(distances)
+    for i in range(len(data)):
+        for j in range(i + 1, len(data)):
+            shared_count = np.intersect1d(neighbors[i], neighbors[j]).shape[0]
+            if shared_count >= smin:
+                shared_neighbors[i, j] = shared_neighbors[j, i] = 1
+
+    # Initialize clusters and unvisited points
+    unvisited = set(range(len(data)))
+    clusters = []
+
+    while unvisited:
+        # Randomly pick an unvisited point
+        point = unvisited.pop()
+        cluster = [point]
+        points_to_visit = set(np.where(shared_neighbors[point] == 1)[0])
+
+        while points_to_visit:
+            point = points_to_visit.pop()
+            if point in unvisited:
+                unvisited.remove(point)
+                cluster.append(point)
+                new_neighbors = set(np.where(shared_neighbors[point] == 1)[0])
+                points_to_visit |= new_neighbors
+
+        clusters.append(cluster)
+
+    computed_labels = np.zeros(len(data), dtype=int)
+    for idx, cluster in enumerate(clusters):
+        computed_labels[cluster] = idx
+
+    # Calculate SSE
+    SSE = 0
+    for cluster in clusters:
+        points = data[cluster]
+        centroid = np.mean(points, axis=0)
+        SSE += np.sum((points - centroid) ** 2)
+
+    # Calculate ARI
+    ARI = calculate_ari(labels, computed_labels)
+
+    return computed_labels, SSE, ARI
+
 
 
 def jarvis_patrick_clustering():
@@ -218,7 +216,7 @@ def jarvis_patrick_clustering():
         slice[i]=selected_data[i*1000:(i+1)*1000]
         slice_labels[i]=selected_labels[i*1000:(i+1)*1000]
     """
-    indices = np.random.choice(n_points, size=500, replace=False)
+    indices = np.random.choice(n_points, size=5000, replace=False)
     selected_data = data[indices]
     selected_labels = labels[indices]
     print(selected_data.shape)
@@ -232,14 +230,14 @@ def jarvis_patrick_clustering():
         slice_labels[i]=selected_labels[i*1000:(i+1)*1000]
     """
     for i in list_i:
-        slice[i]=selected_data[i*100:(i+1)*100]
-        slice_labels[i]=selected_labels[i*100:(i+1)*100]
+        slice[i]=selected_data[i*1000:(i+1)*1000]
+        slice_labels[i]=selected_labels[i*1000:(i+1)*1000]
     print("slice0",slice[0].shape) 
     print("slice0labels",slice_labels[0].shape) 
-    k_values = np.linspace(3, 8, 5)
-    smin_values = np.linspace(4, 10, 5)
-    #smin_values = [4,6,8,10]
-    #k_values = [3,5,7,8]
+    #k_values = np.linspace(3, 8, 5)
+    #smin_values = np.linspace(4, 10, 5)
+    smin_values = [4,6,8,10]
+    k_values = [3,5,7]
     #smin_values = [0.15]
     #k_values = [10]
     groups=[]
