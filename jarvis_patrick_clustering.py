@@ -205,6 +205,7 @@ def jarvis_patrick_clustering():
     data=np.load('question1_cluster_data.npy')
     labels=np.load('question1_cluster_labels.npy')
     n_points = data.shape[0]
+    """
     indices = np.random.choice(n_points, size=5000, replace=False)
     selected_data = data[indices]
     selected_labels = labels[indices]
@@ -216,6 +217,23 @@ def jarvis_patrick_clustering():
     for i in list_i:
         slice[i]=selected_data[i*1000:(i+1)*1000]
         slice_labels[i]=selected_labels[i*1000:(i+1)*1000]
+    """
+    indices = np.random.choice(n_points, size=500, replace=False)
+    selected_data = data[indices]
+    selected_labels = labels[indices]
+    print(selected_data.shape)
+    print(selected_labels.shape)
+    list_i=[0,1,2,3,4]
+    slice={}
+    slice_labels={}
+    """
+    for i in list_i:
+        slice[i]=selected_data[i*1000:(i+1)*1000]
+        slice_labels[i]=selected_labels[i*1000:(i+1)*1000]
+    """
+    for i in list_i:
+        slice[i]=selected_data[i*100:(i+1)*100]
+        slice_labels[i]=selected_labels[i*100:(i+1)*100]
     print("slice0",slice[0].shape) 
     print("slice0labels",slice_labels[0].shape) 
     k_values = np.linspace(3, 8, 5)
